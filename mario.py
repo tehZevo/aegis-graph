@@ -10,7 +10,7 @@ from gym_super_mario_bros.actions import COMPLEX_MOVEMENT
 import cv2
 import numpy as np
 
-from aegis_graph import Node, ManualSensor
+from aegis_graph import Graph, ManualSensor
 
 ACTION_REPEAT = 8
 EXPERIMENT_NAME = "single_node"
@@ -43,17 +43,16 @@ print(mario.action_space)
 
 mario_sensor = ManualSensor(np.prod(mario.observation_space.shape))
 
-# a = Node(128)
+graph = Graph(save_every=100, save_path=EXPERIMENT_NAME)
+
+# a = graph.create_node(128)
 # a.link(mario_sensor)
 
-b = Node(mario.action_space.n, save_every=100)
+b = graph.create_node(mario.action_space.n)
 # b.link(a)
 b.link(mario_sensor)
 
-# nodes = [a, b]
-nodes = [b]
-
-#TODO: async update
+#TODO: async update?
 
 obs, _ = mario.reset()
 
@@ -65,8 +64,9 @@ while True:
     obs = obs.flatten()
     mario_sensor.set_state(obs)
 
-    for node in nodes:
-        node.update()
+    # for node in nodes:
+    #     node.update()
+    graph.update()
 
     steps += 1
     print(steps, np.argmax(b.get_state()))
@@ -80,8 +80,6 @@ while True:
             obs, _ = mario.reset()
             break
     
-    obs = cv2.resize(obs, (32, 30)) #because (width, height)
-
     img = obs.astype("float32")
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     cv2.imshow(EXPERIMENT_NAME, img)

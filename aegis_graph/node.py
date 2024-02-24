@@ -1,27 +1,45 @@
-from uuid import uuid4
 import os
 
 import numpy as np
+import yaml
 
 from .source import Source
 from .link import Link
 
-#TODO: how to link node to self without redundant inputs
 class Node(Source):
-    def __init__(self, size, save_every=1000, save_path="nodes"):
+    def load(path):
+        with open(os.path.join(path, "config.yml"), "r") as f:
+            config = yaml.safe_load(f.read())
+        
+        node = Node(config["size"])
+        node.id = config["id"]
+
+        return node
+        
+    def __init__(self, size):
         super().__init__()
         #TODO: other initializers?
         self.state = np.zeros([size])
         self.links = {}
-        self.id = str(uuid4())
-        self.save_every = save_every
-        self.save_steps = 0
-        self.save_path = save_path
     
     def save(self, path):
-        #TODO: save config
+        node_path = os.path.join(path, self.id)
+        os.makedirs(node_path, exist_ok=True)
+        
+        #save config
+        config = {
+            "size": self.state.shape[0],
+            "id": self.id
+        }
+        with open(os.path.join(node_path, "config.yml"), "w") as f:
+            f.write(yaml.dump(config))
+        
+        #save state
+        np.save(os.path.join(node_path, "state"), self.state)
+
+        #save links
         for link in self.links.values():
-            link.save(os.path.join(path, self.id))
+            link.save(os.path.join(node_path, "links"))
 
     def update(self):
         #dont update state if we have no links
@@ -38,22 +56,26 @@ class Node(Source):
         #TODO: other methods of reduce?
         self.state = np.mean(actions, axis=0)
 
-        self.save_steps += 1
-        if self.save_steps >= self.save_every:
-            self.save(self.save_path)
-            self.save_steps = 0
+        #TODO: if save issues occur, split the continue_step.set()s into a graph-triggered function
 
         #step envs
         for link in self.links.values():
             link.env.continue_step.set()
             
-    def link(self, source):
+    def link(self, source, recurrent=True):
         #TODO: allow this?
         if source.id in self.links:
             raise ValueError("That source is already in this node's links")
 
-        link = Link(source, self)
+        link = Link(source, self, recurrent=recurrent)
         self.links[source.id] = link
+        link.start()
+        
+        return link
+    
+    def add_link(self, link):
+        #TODO: ensure source is not linked already
+        self.links[link.source.id] = link
         link.start()
     
     def unlink(self, source):
