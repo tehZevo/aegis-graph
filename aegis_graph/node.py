@@ -62,12 +62,12 @@ class Node(Source):
         for link in self.links.values():
             link.env.continue_step.set()
             
-    def link(self, source, recurrent=True):
+    def link(self, source, recurrent=True, agent_type="PPO"):
         #TODO: allow this?
         if source.id in self.links:
             raise ValueError("That source is already in this node's links")
 
-        link = Link(source, self, recurrent=recurrent)
+        link = Link(source, self, recurrent=recurrent, agent_type=agent_type)
         self.links[source.id] = link
         link.start()
         

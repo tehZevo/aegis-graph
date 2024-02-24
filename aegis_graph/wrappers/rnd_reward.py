@@ -7,6 +7,6 @@ class RNDReward(gym.Wrapper):
     
     def step(self, action):
         obs, reward, done, terminated, info = self.env.step(action)
+        #NOTE: reward should be 0 since link env doesnt have a reward
         rnd_reward = self.rnd.step(obs)
-        #TODO: RND scale?
         return obs, reward + rnd_reward, done, terminated, info
