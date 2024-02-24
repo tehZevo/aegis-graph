@@ -46,7 +46,7 @@ mario_sensor = ManualSensor(np.prod(mario.observation_space.shape))
 # a = Node(128)
 # a.link(mario_sensor)
 
-b = Node(mario.action_space.n)
+b = Node(mario.action_space.n, save_every=100)
 # b.link(a)
 b.link(mario_sensor)
 

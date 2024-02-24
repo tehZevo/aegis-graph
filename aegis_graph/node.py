@@ -1,3 +1,6 @@
+from uuid import uuid4
+import os
+
 import numpy as np
 
 from .source import Source
@@ -5,12 +8,21 @@ from .link import Link
 
 #TODO: how to link node to self without redundant inputs
 class Node(Source):
-    def __init__(self, size):
+    def __init__(self, size, save_every=1000, save_path="nodes"):
         super().__init__()
         #TODO: other initializers?
         self.state = np.zeros([size])
         self.links = {}
+        self.id = str(uuid4())
+        self.save_every = save_every
+        self.save_steps = 0
+        self.save_path = save_path
     
+    def save(self, path):
+        #TODO: save config
+        for link in self.links.values():
+            link.save(os.path.join(path, self.id))
+
     def update(self):
         #dont update state if we have no links
         if len(self.links) == 0:
@@ -25,6 +37,11 @@ class Node(Source):
         actions = [link.env.last_action for link in self.links.values()]
         #TODO: other methods of reduce?
         self.state = np.mean(actions, axis=0)
+
+        self.save_steps += 1
+        if self.save_steps >= self.save_every:
+            self.save(self.save_path)
+            self.save_steps = 0
 
         #step envs
         for link in self.links.values():
@@ -47,22 +64,4 @@ class Node(Source):
     
     def get_state(self):
         return self.state
-    
-    # def start_link(self, link_env):
-    #     def run():
-    #         try:
-    #             #TODO: store RND somewhere so it can be saved?
-    #             source_size = link_env.source.get_state().shape[-1]
-    #             rnd = RND(source_size)
-    #             wrapped_env = link_env
-    #             wrapped_env = RNDReward(wrapped_env, rnd)
-    #             wrapped_env = ConcatNodeState(wrapped_env, self)
-    #             vec_env = DummyVecEnv([lambda: wrapped_env])
-    #             #TODO: save callback
-    #             model = PPO("MlpPolicy", vec_env, verbose=1, n_steps=128, n_epochs=4)
-    #             model.learn(total_timesteps=float("inf"))
-    #         except Exception as e:
-    #             print(traceback.format_exc())
-
-    #     #TODO: store thread in links dict?
-    #     Thread(target=run, daemon=True).start()
+        

@@ -1,5 +1,7 @@
 from threading import Thread
 import traceback
+from uuid import uuid4
+import os
 
 import gymnasium as gym
 from stable_baselines3 import PPO
@@ -16,6 +18,11 @@ class Link:
         self.env = None
         self.agent = None
         self.rnd = None
+        self.id = str(uuid4())
+
+    def save(self, path):
+        self.agent.save(os.path.join(path, self.id, "agent"))
+        self.rnd.save(os.path.join(path, self.id, "rnd"))
     
     def start(self):
         def run():
