@@ -1,4 +1,4 @@
-from threading import Lock
+from threading import Event
 
 import gymnasium as gym
 
@@ -8,7 +8,8 @@ class LinkEnv(gym.Env):
         self.source = source
         self.node = node
         self.last_action = None
-        self.lock = Lock()
+        self.action_updated = Event()
+        self.continue_step = Event()
 
         #TODO: customizable range for observation?
         #TODO: some way to specify source size without get_state first?
@@ -20,9 +21,14 @@ class LinkEnv(gym.Env):
     
     def step(self, action):
         self.last_action = action
-        
+
+        #tell node we're ready
+        self.action_updated.set()
+
         #wait here for the node to unlock us
-        self.lock.acquire()
+        self.continue_step.wait()
+        self.continue_step.clear()
+        
         obs = self.source.get_state()
 
         return obs, 0, False, False, {}

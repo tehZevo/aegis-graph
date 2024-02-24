@@ -1,6 +1,6 @@
 from .source import Source
 
-#TODO: add protopost n stuff here
+#TODO: make ProtopostSensor
 
 class Sensor(Source):
     def __init__(self):
