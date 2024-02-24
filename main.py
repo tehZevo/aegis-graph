@@ -5,12 +5,22 @@ import time
 
 from aegis_graph import Node
 
-node = Node(32)
+a = Node(32)
 
-node.link(node)
+b = Node(128)
+
+c = Node(16)
+
+b.link(a)
+c.link(a)
+
+nodes = [a, b, c]
+
+#TODO: async update
 
 while True:
     time.sleep(1)
-    node.update()
-    print(node.get_state())
+    for node in nodes:
+        node.update()
+    print(b.get_state())
     print("tock")

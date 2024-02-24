@@ -19,6 +19,11 @@ class Node(Source):
         self.links = {}
     
     def update(self):
+        #dont update state if we have no links
+        if len(self.links) == 0:
+            print("nothing to update...")
+            return
+            
         actions = [env.last_action for env in self.links.values()]
         #TODO: other methods of reduce?
         self.state = np.mean(actions, axis=0)
