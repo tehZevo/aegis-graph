@@ -13,7 +13,7 @@ import numpy as np
 from aegis_graph import Graph, ManualSensor
 
 ACTION_REPEAT = 8
-EXPERIMENT_NAME = "single_node"
+EXPERIMENT_NAME = "double_agent"
 
 #downscale by 8x8 (30, 32) and scale to 0..1 range
 class PixelMarioWrapper(gym.Wrapper):
@@ -43,14 +43,14 @@ print(mario.action_space)
 
 mario_sensor = ManualSensor(np.prod(mario.observation_space.shape))
 
-graph = Graph(save_every=100, save_path=EXPERIMENT_NAME)
+graph = Graph(save_every=1000, save_path=EXPERIMENT_NAME)
 
-# a = graph.create_node(128)
-# a.link(mario_sensor)
+a = graph.create_node(1024)
+a.link(mario_sensor)
 
 b = graph.create_node(mario.action_space.n)
-# b.link(a)
-b.link(mario_sensor)
+b.link(a)
+# b.link(mario_sensor)
 
 #TODO: async update?
 
@@ -64,8 +64,6 @@ while True:
     obs = obs.flatten()
     mario_sensor.set_state(obs)
 
-    # for node in nodes:
-    #     node.update()
     graph.update()
 
     steps += 1
